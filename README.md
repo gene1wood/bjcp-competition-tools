@@ -9,6 +9,10 @@ scoresheets back to entrants.
 
 # Before the competition
 
+## Create `entries.csv`
+
+To create a conforming file from [Brew Competition Online Entry & Management](http://www.brewcompetition.com/) go to the `Admin` page, then in the `Exporting` section, export `All Entries (All Data)`
+
 ## Create Scoresheet Labels
 
 ### `scoresheet-labels/print_scoresheetlables.py`
