@@ -234,6 +234,69 @@ def add_labels(sheet, reader, number=3, entry_numbers=None, prefix='P'):
             sheet.add_label(entries[-1])
             sheet.add_label(entries[-2])
             sheet.add_label(entries[-1])
+        elif len(entries) % 5 == 3:  # 3 entries left over
+            # +---+---+
+            # | A | B |
+            # | A | B |
+            # | A | B |
+            # | A | B |
+            # | - | - |
+            # +---+---+
+            # +---+---+
+            # | C | - |
+            # | C | - |
+            # | C | - |
+            # | C | - |
+            # | - | - |
+            # +---+---+
+            sheet.partial_page(sheet.page_count + 1, ((5,1), (5,2)))
+            sheet.partial_page(sheet.page_count + 2, ((1,2), (2,2), (3,2), (4,2)))
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-1])
+            sheet.add_label(entries[-1])
+            sheet.add_label(entries[-1])
+            sheet.add_label(entries[-1])
+        elif len(entries) % 5 == 4:  # 4 entries left over
+            # +---+---+
+            # | A | B |
+            # | A | B |
+            # | A | B |
+            # | A | B |
+            # | - | - |
+            # +---+---+
+            # +---+---+
+            # | C | D |
+            # | C | D |
+            # | C | D |
+            # | C | D |
+            # | - | - |
+            # +---+---+
+            sheet.partial_page(sheet.page_count + 1, ((5,1), (5,2)))
+            sheet.add_label(entries[-4])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-4])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-4])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-4])
+            sheet.add_label(entries[-3])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-1])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-1])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-1])
+            sheet.add_label(entries[-2])
+            sheet.add_label(entries[-1])
+
+
     print([x['id'] for x in entries])
 
 
