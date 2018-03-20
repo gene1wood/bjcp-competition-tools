@@ -1,6 +1,6 @@
-import labels
+import labels  # pip install pylabels
 import os.path
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase.ttfonts import TTFont  # pip install reportlab
 from reportlab.pdfbase.pdfmetrics import registerFont
 from reportlab.graphics import shapes
 from reportlab.graphics.barcode.qr import QrCodeWidget
@@ -20,8 +20,8 @@ def write_name(label, width, height, data):
     :param label:  
     :param width: 
     :param height: 
-    :param data: An 8-tuple containing
-        entry_id,
+    :param data: A dictionary containing fields like
+        id,
         brewStyle,
         brewCategory,
         brewSubCategory,
@@ -31,18 +31,10 @@ def write_name(label, width, height, data):
         Table
     :return: 
     """
-    (entry_id,
-     brewStyle,
-     brewCategory,
-     brewSubCategory,
-     brewPaid,
-     brewReceived,
-     brewBoxNum,
-     Table) = data
 
-    entry_id = string.zfill(entry_id, 4)
+    data['id'] = string.zfill(data['id'], 4)
     qrw = QrCodeWidget(
-        entry_id,
+        data['id'],
         barLevel='H',
         barWidth=46*mm,
         barHeight=46*mm)
@@ -52,22 +44,22 @@ def write_name(label, width, height, data):
     offset = 40
     label.add(shapes.String(140,
                             height-offset,
-                            "Entry: %s" % entry_id,
+                            "Entry: %s" % data['id'],
                             fontSize=20))
     offset += 46
     label.add(shapes.String(140,
                             height-offset,
-                            "Category: %s" % brewCategory,
+                            "Category: %s" % data['brewCategory'],
                             fontSize=16))
     offset += 16
     label.add(shapes.String(140,
                             height-offset,
-                            "Subcategory: %s" % brewSubCategory,
+                            "Subcategory: %s" % data['brewSubCategory'],
                             fontSize=16))
     offset += 16
     label.add(shapes.String(140,
                             height-offset,
-                            brewStyle,
+                            data['brewStyle'],
                             fontSize=10))
 
 
@@ -91,13 +83,13 @@ def get_sheet():
     return labels.Sheet(specs, write_name, border=False)
 
 
-def add_labels(sheet, rows, number=3, entry_numbers=None):
+def add_labels(sheet, reader, number=3, entry_numbers=None):
     """
     
     :param sheet: The labels.Sheet object in which to add the labels
-    :param rows: List of lists. Each list represents an entry. Each list has
-        8 elements :
-            entry_id,
+    :param reader: A csv DictReader object that returns an array of dicts 
+        each containing fields like :
+            id,
             brewStyle,
             brewCategory,
             brewSubCategory,
@@ -114,9 +106,10 @@ def add_labels(sheet, rows, number=3, entry_numbers=None):
     """
 
     if entry_numbers is None:
-        entries = rows
+        all_entries = list(reader)
+        entries = [x for x in all_entries if int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1]
     else:
-        entries = [x for x in rows if x[7][:2] in entry_numbers]
+        entries = [x for x in rows if x['id'].zfill(3) in entry_numbers]
 
     if number == 2:
         # +---+---+
@@ -237,13 +230,13 @@ def add_labels(sheet, rows, number=3, entry_numbers=None):
             sheet.add_label(entries[-1])
             sheet.add_label(entries[-2])
             sheet.add_label(entries[-1])
-    print([x[0] for x in entries])
+    print([x['id'] for x in entries])
 
 
 def main():
     sheet = get_sheet()
     with open(os.path.join(base_path, "entries.csv")) as f:
-        reader = csv.reader(f)
+        reader = csv.DictReader(f)
         add_labels(sheet, reader)
         # finals = ['004', '033', '212']
         # add_labels(sheet, reader, 4, finals)
