@@ -32,7 +32,6 @@ def write_name(label, width, height, data):
     :return: 
     """
 
-    data['id'] = string.zfill(data['id'], 4)
     qrw = QrCodeWidget(
         data['id'],
         barLevel='H',
@@ -82,8 +81,12 @@ def get_sheet():
     # Create the sheet.
     return labels.Sheet(specs, write_name, border=False)
 
+def add_prefix(row, prefix):
+    row['id'] = prefix + string.zfill(row['id'], 3)
+    return row
 
-def add_labels(sheet, reader, number=3, entry_numbers=None):
+
+def add_labels(sheet, reader, number=3, entry_numbers=None, prefix='P'):
     """
     
     :param sheet: The labels.Sheet object in which to add the labels
@@ -105,11 +108,12 @@ def add_labels(sheet, reader, number=3, entry_numbers=None):
     :return: 
     """
 
+    all_entries = list(reader)
     if entry_numbers is None:
-        all_entries = list(reader)
         entries = [x for x in all_entries if int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1]
     else:
-        entries = [x for x in rows if x['id'].zfill(3) in entry_numbers]
+        entries = [x for x in all_entries if x['id'].zfill(3) in entry_numbers]
+    entries = [add_prefix(x, prefix) for x in entries]
 
     if number == 2:
         # +---+---+
