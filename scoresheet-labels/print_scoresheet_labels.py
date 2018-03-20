@@ -32,6 +32,8 @@ def write_name(label, width, height, data):
     :return: 
     """
 
+    table_number = data['Table'].split(':')[0].lstrip('0')
+
     qrw = QrCodeWidget(
         data['id'],
         barLevel='H',
@@ -48,12 +50,12 @@ def write_name(label, width, height, data):
     offset += 46
     label.add(shapes.String(140,
                             height-offset,
-                            "Category: %s" % data['brewCategory'],
+                            "Table: %s" % table_number,
                             fontSize=16))
     offset += 16
     label.add(shapes.String(140,
                             height-offset,
-                            "Subcategory: %s" % data['brewSubCategory'],
+                            "Category: %s%s" % (data['brewCategory'], data['brewSubCategory']),
                             fontSize=16))
     offset += 16
     label.add(shapes.String(140,
