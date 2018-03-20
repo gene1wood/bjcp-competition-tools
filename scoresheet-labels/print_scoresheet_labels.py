@@ -88,7 +88,7 @@ def add_prefix(row, prefix):
     return row
 
 
-def add_labels(sheet, reader, number=3, entry_numbers=None, prefix='P'):
+def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
     """
     
     :param sheet: The labels.Sheet object in which to add the labels
@@ -106,15 +106,15 @@ def add_labels(sheet, reader, number=3, entry_numbers=None, prefix='P'):
       1 judge would be 2 labels (1 judges + 1 cover sheet), 5 entries/sheet
       2 judges would be 3 labels (2 judges + 1 cover sheet), 3 entries/sheet
       3 judges would be 4 labels (3 judges + 1 cover sheet), 2 entries/sheet
-    :param entry_numbers: List of strings of the entry numbers to print 
+    :param prefix: Entry id prefix
+    :param filter_function: A function used to filter the entries
     :return: 
     """
 
+    if filter_function is None:
+        filter_function = lambda x: True
     all_entries = list(reader)
-    if entry_numbers is None:
-        entries = [x for x in all_entries if int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1]
-    else:
-        entries = [x for x in all_entries if x['id'].zfill(3) in entry_numbers]
+    entries = list(filter(filter_function, all_entries))
     entries = [add_prefix(x, prefix) for x in entries]
 
     if number == 2:
@@ -298,7 +298,6 @@ def add_labels(sheet, reader, number=3, entry_numbers=None, prefix='P'):
             sheet.add_label(entries[-2])
             sheet.add_label(entries[-1])
 
-
     print([x['id'] for x in entries])
 
 
@@ -306,9 +305,16 @@ def main():
     sheet = get_sheet()
     with open(os.path.join(base_path, "entries.csv")) as f:
         reader = csv.DictReader(f)
-        add_labels(sheet, reader)
-        # finals = ['004', '033', '212']
-        # add_labels(sheet, reader, 4, finals)
+        
+        # Add labels for all entries received and paid for
+        add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+
+        # Add labels for all entries at table 02 or 09 and paid for
+        # add_labels(sheet, reader, filter_function=lambda x: int(x['brewPaid']) == 1 and ('02:' in x['Table'] or '09:' in x['Table']))
+
+        # Add 4 labels for each entry in the `finals` list
+        # finals = ['004', '033', '212', '214']
+        # add_labels(sheet, reader, number=4, filter_function=lambda x: x['id'].zfill(3) in finals)
     sheet.save('scoresheet_entry_labels.pdf')
     print("{0:d} label(s) output on {1:d} page(s).".format(sheet.label_count,
                                                            sheet.page_count))
