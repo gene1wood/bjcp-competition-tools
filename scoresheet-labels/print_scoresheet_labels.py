@@ -117,6 +117,7 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
     all_entries = list(reader)
     entries = list(filter(filter_function, all_entries))
     entries = [add_prefix(x, prefix) for x in entries]
+    entries.sort(key=lambda x: int(x['Table'][:2]))
 
     if number == 2:
         # +---+---+
