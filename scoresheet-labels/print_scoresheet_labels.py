@@ -89,7 +89,7 @@ def add_prefix(row, prefix):
     return row
 
 
-def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
+def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
     """
     
     :param sheet: The labels.Sheet object in which to add the labels
@@ -138,6 +138,7 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
                 # | C | C |
                 # | C | - |
                 # +---+---+
+                sheet.partial_page(sheet.page_count + 1, ((5,2),))
                 sheet.add_label(entries[i-3])
                 sheet.add_label(entries[i-2])
                 sheet.add_label(entries[i-3])
@@ -174,30 +175,31 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
             sheet.add_label(entries[-1])
     elif number == 4:
         for i in range(1, len(entries) + 1):
-            if i % 5 == 0:  # Entry E
+            if i % 4 == 0:  # Entry D
                 # +---+---+
                 # | A | B |
                 # | A | B |
                 # | A | B |
                 # | A | B |
-                # | C | C |
+                # | - | - |
                 # +---+---+
                 # +---+---+
-                # | D | E |
-                # | D | E |
-                # | D | E |
-                # | D | E |
-                # | C | C |
+                # | C | D |
+                # | C | D |
+                # | C | D |
+                # | C | D |
+                # | - | - |
                 # +---+---+
-                sheet.add_label(entries[i - 5])
-                sheet.add_label(entries[i - 4])
-                sheet.add_label(entries[i - 5])
-                sheet.add_label(entries[i - 4])
-                sheet.add_label(entries[i - 5])
-                sheet.add_label(entries[i - 4])
-                sheet.add_label(entries[i - 5])
+
+                sheet.partial_page(sheet.page_count + 1, ((5, 1), (5, 2)))
+                sheet.partial_page(sheet.page_count + 2, ((5, 1), (5, 2)))
                 sheet.add_label(entries[i - 4])
                 sheet.add_label(entries[i - 3])
+                sheet.add_label(entries[i - 4])
+                sheet.add_label(entries[i - 3])
+                sheet.add_label(entries[i - 4])
+                sheet.add_label(entries[i - 3])
+                sheet.add_label(entries[i - 4])
                 sheet.add_label(entries[i - 3])
 
                 sheet.add_label(entries[i - 2])
@@ -208,12 +210,11 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
                 sheet.add_label(entries[i - 1])
                 sheet.add_label(entries[i - 2])
                 sheet.add_label(entries[i - 1])
-                sheet.add_label(entries[i - 3])
-                sheet.add_label(entries[i - 3])
+
 
         print("number of entries %s" % len(entries))
         print("entries mod 5 = %s" % (len(entries) % 5))
-        if len(entries) % 5 == 1:  # 1 entry left over
+        if len(entries) % 4 == 1:  # 1 entry left over
             # +---+---+
             # | A | A |
             # | A | A |
@@ -222,7 +223,7 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
             # | - | - |
             # +---+---+
             sheet.add_label(entries[-1], count=4)
-        elif len(entries) % 5 == 2:  # 2 entries left over
+        elif len(entries) % 4 == 2:  # 2 entries left over
             # +---+---+
             # | A | B |
             # | A | B |
@@ -238,7 +239,7 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
             sheet.add_label(entries[-1])
             sheet.add_label(entries[-2])
             sheet.add_label(entries[-1])
-        elif len(entries) % 5 == 3:  # 3 entries left over
+        elif len(entries) % 4 == 3:  # 3 entries left over
             # +---+---+
             # | A | B |
             # | A | B |
@@ -267,38 +268,7 @@ def add_labels(sheet, reader, number=3, prefix='P', filter_function=None):
             sheet.add_label(entries[-1])
             sheet.add_label(entries[-1])
             sheet.add_label(entries[-1])
-        elif len(entries) % 5 == 4:  # 4 entries left over
-            # +---+---+
-            # | A | B |
-            # | A | B |
-            # | A | B |
-            # | A | B |
-            # | - | - |
-            # +---+---+
-            # +---+---+
-            # | C | D |
-            # | C | D |
-            # | C | D |
-            # | C | D |
-            # | - | - |
-            # +---+---+
-            sheet.partial_page(sheet.page_count + 1, ((5,1), (5,2)))
-            sheet.add_label(entries[-4])
-            sheet.add_label(entries[-3])
-            sheet.add_label(entries[-4])
-            sheet.add_label(entries[-3])
-            sheet.add_label(entries[-4])
-            sheet.add_label(entries[-3])
-            sheet.add_label(entries[-4])
-            sheet.add_label(entries[-3])
-            sheet.add_label(entries[-2])
-            sheet.add_label(entries[-1])
-            sheet.add_label(entries[-2])
-            sheet.add_label(entries[-1])
-            sheet.add_label(entries[-2])
-            sheet.add_label(entries[-1])
-            sheet.add_label(entries[-2])
-            sheet.add_label(entries[-1])
+
 
     print([x['id'] for x in entries])
 
@@ -312,14 +282,30 @@ def main():
         add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
 
         # Add labels for all entries at table 02 or 09 and paid for
-        # add_labels(sheet, reader, filter_function=lambda x: int(x['brewPaid']) == 1 and ('02:' in x['Table'] or '09:' in x['Table']))
+        # add_labels(
+        #     sheet,
+        #     reader,
+        #     filter_function=lambda x: x['Table'][:2] in ['03', '08', '11', '14', '15', '19', '25', '26', '27'])
 
         # Add 4 labels for each entry in the `finals` list
         # finals = ['004', '033', '212', '214']
         # add_labels(sheet, reader, number=4, filter_function=lambda x: x['id'].zfill(3) in finals)
+
+        # Add 4 labels for each entry based on the custom Mini-BOS field
+        # add_labels(
+        #     sheet,
+        #     reader,
+        #     number=4,
+        #     filter_function=lambda x: x['Mini-BOS'] == '1')
+
     sheet.save('scoresheet_entry_labels.pdf')
     print("{0:d} label(s) output on {1:d} page(s).".format(sheet.label_count,
                                                            sheet.page_count))
 
 if __name__ == "__main__":
     main()
+
+
+
+
+ ###
