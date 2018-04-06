@@ -35,7 +35,7 @@ def write_name(label, width, height, data):
     table_number = data['Table'].split(':')[0].lstrip('0')
 
     qrw = QrCodeWidget(
-        data['id'],
+        data['prefixed_id'],
         barLevel='H',
         barWidth=46*mm,
         barHeight=46*mm)
@@ -84,7 +84,8 @@ def get_sheet():
     return labels.Sheet(specs, write_name, border=False)
 
 def add_prefix(row, prefix):
-    row['id'] = prefix + string.zfill(row['id'], 3)
+    row['id'] = string.zfill(row['id'], 4)
+    row['prefixed_id'] = prefix + string.zfill(row['id'], 4)
     return row
 
 
