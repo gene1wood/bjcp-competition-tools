@@ -422,6 +422,14 @@ do {
 	$edit_link .= "&amp;view=".$brewCategory."-".$row_log['brewSubCategory'];
 	$edit_link .= "' title='Edit ".$row_log['brewName']."'>Edit</a>&nbsp;&nbsp;";
 	
+	$salt = "YOUR-CUSTOM-SALT-DIFFERENT-FOR-EACH-YEAR-OF-THE-COMPETITION";
+	$scoresheet_domain = "www.example.com";
+	$scoresheet_link = "";
+	$scoresheet_link .= "<a href='https://" . $scoresheet_domain . "/get_scoresheet.php?id=".$row_log['id']."&amp;hash=".hash("sha256", $row_log['id'].$salt);
+	$scoresheet_link .= "' title='Download Scoresheet for ".$row_log['brewName']."'>";
+	$scoresheet_link .= "<span class='icon'><img src='".$base_url."images/download.png' border='0' alt='Download Scoresheet for ".$row_log['brewName']."' title='Download Scoresheet for ".$row_log['brewName']."'></span>";
+	$scoresheet_link .= "</a>&nbsp;&nbsp;";
+	
 	// Print Forms
 	$alt_title = "";
 	$alt_title .= "Print ";
@@ -459,6 +467,7 @@ do {
 		
 		$entry_output .= "<td class='dataList' nowrap='nowrap'>";
 		if ((($registration_open == 2) && ($entry_window_open == 1)) && ((NHC) && ($prefix == "final_"))) $entry_output .= $edit_link;
+                $entry_output .= $scoresheet_link;
 		$entry_output .= "</td>";
 	}
 	
@@ -543,4 +552,4 @@ if (($totalRows_log > 0) && ($entry_window_open >= 1)) {
 if ($entry_window_open == 0) echo sprintf("<p>You will be able to add entries on or after %s.</p>",$entry_open); 
 ?>
 
-<!-- Page Rebuild completed 08.27.15 --> 
+<!-- Page Rebuild completed 08.27.15 -->
