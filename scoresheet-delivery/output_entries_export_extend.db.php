@@ -1,5 +1,6 @@
 <?php
-$query_scores = sprintf("SELECT scoreEntry,scorePlace,scoreType FROM $judging_scores_db_table WHERE eid='%s'",$row_sql['id']);
+// $query_scores = sprintf("SELECT scoreEntry,scorePlace,scoreType FROM $judging_scores_db_table WHERE eid='%s'",$row_sql['id']);
+$query_scores = sprintf("SELECT scoreEntry,scorePlace,scoreType,scoreMiniBOS FROM $judging_scores_db_table WHERE eid='%s'",$row_sql['id']);
 $scores = mysql_query($query_scores, $brewing) or die(mysql_error());
 $row_scores = mysql_fetch_assoc($scores);
 

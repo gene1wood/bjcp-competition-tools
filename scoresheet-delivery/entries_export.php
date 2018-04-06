@@ -29,6 +29,7 @@ if ((isset($_SESSION['loginUsername'])) && ($_SESSION['userLevel'] <= 1)) {
 			$headers[] .= "Round";
 			$headers[] .= "Score";
 			$headers[] .= "Place";
+			$headers[] .= "Mini-BOS";
 			$headers[] .= "BOS Place";
 			$headers[] .= "Style Type";
 			$headers[] .= "Location";
@@ -47,7 +48,8 @@ if ((isset($_SESSION['loginUsername'])) && ($_SESSION['userLevel'] <= 1)) {
 			do {
 				include(DB.'output_entries_export_extend.db.php');
 				$fields1 = array_values($row_sql);
-				$fields2 = array($table_name,$row_flight['flightNumber'],$row_flight['flightRound'],sprintf("%02s",$row_scores['scoreEntry']),$row_scores['scorePlace'],$bos_place,$style_type,$location[2]);
+				// $fields2 = array($table_name,$row_flight['flightNumber'],$row_flight['flightRound'],sprintf("%02s",$row_scores['scoreEntry']),$row_scores['scorePlace'],$bos_place,$style_type,$location[2]);
+				$fields2 = array($table_name,$row_flight['flightNumber'],$row_flight['flightRound'],sprintf("%02s",$row_scores['scoreEntry']),$row_scores['scorePlace'],$row_scores['scoreMiniBOS'],$bos_place,$style_type,$location[2]);
 				$fields = array_merge($fields1,$fields2);
 				
 				fputcsv($fp, $fields);
