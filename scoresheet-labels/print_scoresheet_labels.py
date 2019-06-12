@@ -47,7 +47,7 @@ def write_name(label, width, height, data):
                             height-offset,
                             "Entry: %s" % data['id'],
                             fontSize=20))
-    offset += 46
+    offset += 18
     label.add(shapes.String(140,
                             height-offset,
                             "Table: %s" % table_number,
@@ -57,11 +57,36 @@ def write_name(label, width, height, data):
                             height-offset,
                             "Category: %s%s" % (data['brewCategory'], data['brewSubCategory']),
                             fontSize=16))
-    offset += 16
+    offset += 14
     label.add(shapes.String(140,
                             height-offset,
                             data['brewStyle'],
                             fontSize=10))
+
+    offset += 12
+    label.add(shapes.String(140,
+                            height-offset,
+                            "        Final",
+                            fontSize=8))
+
+    label.add(shapes.Rect(180,
+                          height-(offset + 22),
+                          60,
+                          30,
+                          fillColor=None,
+                          strokeWidth=1))
+
+    offset += 10
+    label.add(shapes.String(140,
+                            height-offset,
+                            "Composite",
+                            fontSize=8))
+
+    offset += 10
+    label.add(shapes.String(140,
+                            height-offset,
+                            "        Score",
+                            fontSize=8))
 
 
 def get_sheet():
@@ -279,13 +304,13 @@ def main():
         reader = csv.DictReader(f)
         
         # Add labels for all entries received and paid for
-        add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+        # add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
 
         # Add labels for all entries at table 02 or 09 and paid for
-        # add_labels(
-        #     sheet,
-        #     reader,
-        #     filter_function=lambda x: x['Table'][:2] in ['03', '08', '11', '14', '15', '19', '25', '26', '27'])
+        add_labels(
+             sheet,
+             reader,
+             filter_function=lambda x: x['Table'][:2] in ['22', '29'])
 
         # Add 4 labels for each entry in the `finals` list
         # finals = ['004', '033', '212', '214']
@@ -302,10 +327,6 @@ def main():
     print("{0:d} label(s) output on {1:d} page(s).".format(sheet.label_count,
                                                            sheet.page_count))
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
- ###
