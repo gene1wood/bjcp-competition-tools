@@ -302,15 +302,21 @@ def main():
     sheet = get_sheet()
     with open(os.path.join(base_path, "entries.csv")) as f:
         reader = csv.DictReader(f)
-        
-        # Add labels for all entries received and paid for
-        # add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
 
-        # Add labels for all entries at table 02 or 09 and paid for
+        # Offsites
+        # 2 labels for each entry (2 judges, no scoresheets)
+        # Tables 22 or 29
+        # beers that are received and paid for
+        # prelims prefix
         add_labels(
              sheet,
              reader,
-             filter_function=lambda x: x['Table'][:2] in ['22', '29'])
+             number=2,
+             prefix='P',
+             filter_function=lambda x: x['Table'][:2] in ['22', '29'] and int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+
+        # Add labels for all entries received and paid for
+        # add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
 
         # Add 4 labels for each entry in the `finals` list
         # finals = ['004', '033', '212', '214']
