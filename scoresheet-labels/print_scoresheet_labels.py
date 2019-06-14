@@ -16,10 +16,10 @@ base_path = os.path.dirname(__file__)
 
 def write_name(label, width, height, data):
     """
-    
-    :param label:  
-    :param width: 
-    :param height: 
+
+    :param label:
+    :param width:
+    :param height:
     :param data: A dictionary containing fields like
         id,
         brewStyle,
@@ -28,11 +28,11 @@ def write_name(label, width, height, data):
         brewPaid,
         brewReceived,
         brewBoxNum,
-        Table
-    :return: 
+        brewTable
+    :return:
     """
 
-    table_number = data['Table'].split(':')[0].lstrip('0')
+    table_number = data['brewTable'].split(':')[0].lstrip('0')
 
     qrw = QrCodeWidget(
         data['prefixed_id'],
@@ -116,9 +116,9 @@ def add_prefix(row, prefix):
 
 def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
     """
-    
+
     :param sheet: The labels.Sheet object in which to add the labels
-    :param reader: A csv DictReader object that returns an array of dicts 
+    :param reader: A csv DictReader object that returns an array of dicts
         each containing fields like :
             id,
             brewStyle,
@@ -134,7 +134,7 @@ def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
       3 judges would be 4 labels (3 judges + 1 cover sheet), 2 entries/sheet
     :param prefix: Entry id prefix
     :param filter_function: A function used to filter the entries
-    :return: 
+    :return:
     """
 
     if filter_function is None:
@@ -142,7 +142,7 @@ def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
     all_entries = list(reader)
     entries = list(filter(filter_function, all_entries))
     entries = [add_prefix(x, prefix) for x in entries]
-    entries.sort(key=lambda x: int(x['Table'][:2]))
+    entries.sort(key=lambda x: int(x['brewTable'][:2]))
 
     if number == 2:
         # +---+---+
@@ -308,12 +308,25 @@ def main():
         # Tables 22 or 29
         # beers that are received and paid for
         # prelims prefix
-        add_labels(
-             sheet,
-             reader,
-             number=2,
-             prefix='P',
-             filter_function=lambda x: x['Table'][:2] in ['22', '29'] and int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+        # add_labels(
+        #      sheet,
+        #      reader,
+        #      number=2,
+        #      prefix='P',
+        #      filter_function=lambda x: x['brewTable'][:2] in ['22', '29'] and int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+
+        # Prelims
+        # 2 labels for each entry (2 judges, no scoresheets)
+        # All tables except 22 or 29 which were already printed
+        # beers that are received and paid for
+        # prelims prefix
+        # add_labels(
+        #      sheet,
+        #      reader,
+        #      number=2,
+        #      prefix='P',
+        #      filter_function=lambda x: x['brewTable'][:2] not in ['22', '29'] and int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+
 
         # Add labels for all entries received and paid for
         # add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
