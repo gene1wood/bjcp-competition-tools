@@ -1,4 +1,5 @@
 import labels  # pip install pylabels
+import sys
 import os.path
 from reportlab.pdfbase.ttfonts import TTFont  # pip install reportlab
 from reportlab.pdfbase.pdfmetrics import registerFont
@@ -21,18 +22,18 @@ def write_name(label, width, height, data):
     :param width:
     :param height:
     :param data: A dictionary containing fields like
-        id,
-        brewStyle,
-        brewCategory,
-        brewSubCategory,
-        brewPaid,
-        brewReceived,
-        brewBoxNum,
-        brewTable
+        id, Entry Number
+        brewStyle, Style
+        brewCategory, Category
+        brewSubCategory, Sub Category
+        brewPaid, Paid
+        brewReceived, Received
+        brewBoxNum, Box Num
+        brewTable Table
     :return:
     """
 
-    table_number = data['brewTable'].split(':')[0].lstrip('0')
+    table_number = data['Table'].split(':')[0].lstrip('0')
 
     qrw = QrCodeWidget(
         data['prefixed_id'],
@@ -45,7 +46,7 @@ def write_name(label, width, height, data):
     offset = 40
     label.add(shapes.String(140,
                             height-offset,
-                            "Entry: %s" % data['id'],
+                            "Entry: %s" % data['Entry Number'],
                             fontSize=20))
     offset += 18
     label.add(shapes.String(140,
@@ -55,12 +56,12 @@ def write_name(label, width, height, data):
     offset += 16
     label.add(shapes.String(140,
                             height-offset,
-                            "Category: %s%s" % (data['brewCategory'], data['brewSubCategory']),
+                            "Category: %s%s" % (data['Category'], data['Sub Category']),
                             fontSize=16))
     offset += 14
     label.add(shapes.String(140,
                             height-offset,
-                            data['brewStyle'],
+                            data['Style'],
                             fontSize=10))
 
     offset += 12
@@ -109,8 +110,8 @@ def get_sheet():
     return labels.Sheet(specs, write_name, border=False)
 
 def add_prefix(row, prefix):
-    row['id'] = string.zfill(row['id'], 4)
-    row['prefixed_id'] = prefix + string.zfill(row['id'], 4)
+    row['Entry Number'] = string.zfill(row['Entry Number'], 4)
+    row['prefixed_id'] = prefix + string.zfill(row['Entry Number'], 4)
     return row
 
 
@@ -120,14 +121,14 @@ def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
     :param sheet: The labels.Sheet object in which to add the labels
     :param reader: A csv DictReader object that returns an array of dicts
         each containing fields like :
-            id,
-            brewStyle,
-            brewCategory,
-            brewSubCategory,
-            brewPaid,
-            brewReceived,
-            brewBoxNum,
-            Table
+            id, Entry Number
+            brewStyle, Style
+            brewCategory, Category
+            brewSubCategory, Sub Category
+            brewPaid, Paid
+            brewReceived, Received
+            brewBoxNum, Box Num
+            brewTable Table
     :param number: Number of labels to print for each given entry.
       1 judge would be 2 labels (1 judges + 1 cover sheet), 5 entries/sheet
       2 judges would be 3 labels (2 judges + 1 cover sheet), 3 entries/sheet
@@ -142,7 +143,7 @@ def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
     all_entries = list(reader)
     entries = list(filter(filter_function, all_entries))
     entries = [add_prefix(x, prefix) for x in entries]
-    entries.sort(key=lambda x: int(x['brewTable'][:2]))
+    entries.sort(key=lambda x: int(x['Table'][:2]))
 
     if number == 2:
         # +---+---+
@@ -295,12 +296,15 @@ def add_labels(sheet, reader, number=3, prefix='F', filter_function=None):
             sheet.add_label(entries[-1])
 
 
-    print([x['id'] for x in entries])
+    print([x['Entry Number'] for x in entries])
 
 
 def main():
+    if len(sys.argv) < 2:
+        print('missing argument')
+        return True
     sheet = get_sheet()
-    with open(os.path.join(base_path, "entries.csv")) as f:
+    with open(os.path.join(base_path, sys.argv[1])) as f:
         reader = csv.DictReader(f)
 
         # Offsites
@@ -308,12 +312,12 @@ def main():
         # Tables 22 or 29
         # beers that are received and paid for
         # prelims prefix
-        # add_labels(
-        #      sheet,
-        #      reader,
-        #      number=2,
-        #      prefix='P',
-        #      filter_function=lambda x: x['brewTable'][:2] in ['22', '29'] and int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+        add_labels(
+             sheet,
+             reader,
+             number=2,
+             prefix='P',
+             filter_function=lambda x: '{}{}'.format(x['Category'], x['Sub Category']) in ['20A', '20B', '27A8'] and int(x['Received']) == 1 and int(x['Paid']) in [1, 0])
 
         # Prelims
         # 2 labels for each entry (2 judges, no scoresheets)
@@ -325,21 +329,22 @@ def main():
         #      reader,
         #      number=2,
         #      prefix='P',
-        #      filter_function=lambda x: x['brewTable'][:2] not in ['22', '29'] and int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+        #      filter_function=lambda x: x['Table'][:2] not in ['22', '29'] and int(x['Received']) == 1 and int(x['Paid']) == 1)
 
 
         # Add labels for all entries received and paid for
-        # add_labels(sheet, reader, filter_function=lambda x: int(x['brewReceived']) == 1 and int(x['brewPaid']) == 1)
+        # add_labels(sheet, reader, filter_function=lambda x: int(x['Received']) == 1 and int(x['Paid']) == 1)
 
         # Add 4 labels for each entry in the `finals` list
         # finals = ['004', '033', '212', '214']
-        # add_labels(sheet, reader, number=4, filter_function=lambda x: x['id'].zfill(3) in finals)
+        # add_labels(sheet, reader, number=4, filter_function=lambda x: x['Entry Number'].zfill(3) in finals)
 
-        # Add 4 labels for each entry based on the custom Mini-BOS field
+        # Add 3 labels for each entry based on the custom Mini-BOS field
         # add_labels(
         #     sheet,
         #     reader,
-        #     number=4,
+        #     number=3,
+        #     prefix='F',
         #     filter_function=lambda x: x['Mini-BOS'] == '1')
 
     sheet.save('scoresheet_entry_labels.pdf')
