@@ -19,14 +19,14 @@ To create a conforming file from [Brew Competition Online Entry & Management](ht
 
 Given a `.csv` file called `entries.csv` containing 8 columns
 
-    entry_id,
+    id,
     brewStyle,
     brewCategory,
     brewSubCategory,
     brewPaid,
     brewReceived,
     brewBoxNum,
-    Table
+    brewTable
 
 Produce a PDF to print onto Avery 5963 labels containing 2, 3 or 4 copies of
 each entry's label
