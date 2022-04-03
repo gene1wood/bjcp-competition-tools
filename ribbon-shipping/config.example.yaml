@@ -1,0 +1,10 @@
+easypost_production_api_key: abcdefghijklmnopqrstuv
+easypost_test_api_key: vutsrqponmlkjihgfedcba
+from_address:
+  name: John Doe
+  company: Homebrew Club Name
+  street1: 123 First Ave.
+  city: Springfield
+  state: NY
+  zip: 12345
+  phone: 212-555-5555
