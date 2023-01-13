@@ -1,3 +1,5 @@
 pylabels
 reportlab
 mariadb  # sudo apt install libmariadb3 libmariadb-dev
+easypost
+pyyaml
