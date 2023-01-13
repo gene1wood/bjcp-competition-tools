@@ -19,9 +19,9 @@
           zip: 12345
           phone: 212-555-5555
 * Create the `winners.csv` file by going to the Admin panel of `BCOE&M`, going
-  to `Exporting` and clicking `Winners` in the `CSV Files` section. 
-  Ensure that your version of `BCOE&M` has the patched 
-  `output_entries_export_winner.db.php` and `entries_export.php`
+  to `Data Exports` and in the `Participant Data (CSV)` section click `Winners`.
+  If you're going by entry ids, ensure that your version of `BCOE&M` has the 
+  patched `output_entries_export_winner.db.php` and `entries_export.php`
   files so that the entry id is included in the `winners.csv` file
 * Create the `entry_ids_to_ship.txt` file that lists the entries you'd like to
   create shipping labels for. This should be a file with one entry id on each
