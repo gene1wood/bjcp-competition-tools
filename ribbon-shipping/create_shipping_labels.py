@@ -77,6 +77,7 @@ def get_winners(entries_file):
 
 def get_labels(from_address, winners, prod, just_show_rates):
     result = {}
+    total_cost = 0.0
     for email in winners:
         winner = winners[email]
         name = "%s %s" % (winner['First Name'], winner['Last Name'])
@@ -143,6 +144,7 @@ def get_labels(from_address, winners, prod, just_show_rates):
 
         if just_show_rates:
             result[email] = {'name': name, 'price': rate.rate}
+            total_cost += float(rate.rate)
             print('Rate : %s %s for entries %s' % (email, winner['entries'], rate.rate))
         else:
             try:
@@ -167,6 +169,8 @@ def get_labels(from_address, winners, prod, just_show_rates):
                 'name': name,
                 'tracking_code': shipment.tracking_code
             }
+    if just_show_rates:
+        print(f"Total cost is {total_cost:.2f}")
     return result
 
 
@@ -193,7 +197,7 @@ def main():
     labels = get_labels(from_address, winners, args.prod, args.just_show_rates)
 
     with open('labels.json', 'w') as f:
-        json.dump(labels, f)
+        json.dump(labels, indent=4)
 
 
 if __name__ == "__main__":
