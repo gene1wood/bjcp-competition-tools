@@ -1,6 +1,5 @@
 import argparse
 import os.path
-import sys
 import csv
 import json
 import easypost  # pip install easypost
@@ -60,13 +59,16 @@ def get_winners(entries_file):
             raise Exception('The entry ids %s in entry_ids_to_ship.txt were missing from winners.csv' % entry_ids)
     elif all([',' in x for x in lines]):
         for winner in all_winners:
-            if [winner['Table'], winner['Place']] in [x.split(',') for x in lines]:
+            if [winner['Table'], winner['Place']] in [x.split(',')[0:2] for x in lines]:
                 if winner['Email Address'] not in winners:
                     winners[winner['Email Address']] = winner.copy()
                     winners[winner['Email Address']]['entries'] = []
+                if [winner['Table'], winner['Place'], 'bos'] in [x.split(',') for x in lines]:
+                    winners[winner['Email Address']]['entries'].append("%s,%s,bos" % (winner['Table'], winner['Place']))
                 winners[winner['Email Address']]['entries'].append("%s,%s" % (winner['Table'], winner['Place']))
             else:
-                print("Skipping winner for Table %s Place %s as the ribbon was already picked up" % (winner['Table'], winner['Place']))
+                print("Skipping winner for Table %s Place %s as the ribbon was already picked up" % (
+                    winner['Table'], winner['Place']))
     else:
         print(f"The {entries_file.name} file has a mix of comma delimited tables/place lines and entry number lines")
         exit(1)
@@ -75,7 +77,7 @@ def get_winners(entries_file):
     return winners
 
 
-def get_labels(from_address, winners, prod, just_show_rates):
+def get_labels(client, from_address, winners, prod, just_show_rates):
     result = {}
     total_cost = 0.0
     for email in winners:
@@ -86,25 +88,24 @@ def get_labels(from_address, winners, prod, just_show_rates):
             print("File %s already exists, skipping" % filename)
             continue
 
-        fields = {
+        to_address = {
             'name': name,
             'country': winner['Country'],
             'email': winner['Email Address']
         }
         if winner['Address']:
-            fields['street1'] = winner['Address']
+            to_address['street1'] = winner['Address']
         if winner['City']:
-            fields['city'] = winner['City']
+            to_address['city'] = winner['City']
         if winner['State/Province']:
-            fields['state'] = winner['State/Province']
+            to_address['state'] = winner['State/Province']
         if winner['Zip/Postal Code']:
-            fields['zip'] = winner['Zip/Postal Code']
+            to_address['zip'] = winner['Zip/Postal Code']
         if winner['Zip/Postal Code']:
-            fields['zip'] = winner['Zip/Postal Code']
+            to_address['zip'] = winner['Zip/Postal Code']
         if winner['Phone']:
-            fields['phone'] = winner['Phone']
+            to_address['phone'] = winner['Phone']
 
-        to_address = easypost.Address.create(**fields)
         # name=name,
         # street1=winner['Address'],
         # city=winner['City'],
@@ -114,22 +115,23 @@ def get_labels(from_address, winners, prod, just_show_rates):
         # phone=winner['Phone'],
         # email=winner['Email Address']
 
-
-
-        plastic_envelope_weight = 0.5
+        plastic_envelope_weight = 0.6  # 0.6 - 0.8  includes 4" x 6" mailing label
         tyvek_envelope_weight = 0.6
         paper_envelope_weight = 1.0
-        ribbon_weight = 1.7
-        weight = plastic_envelope_weight + (ribbon_weight * len(winner['entries']))
+        ribbon_weight = 1.7  # 1.5 - 1.7
+        bos_ribbon_weight = 2.7
+        entries = [x for x in winner['entries'] if len(x.split(',')) == 2]
+        bos_entries = [x for x in winner['entries'] if len(x.split(',')) == 3 and x.split(',')[2] == 'bos']
+        weight = plastic_envelope_weight + (ribbon_weight * len(entries)) + (bos_ribbon_weight * len(bos_entries))
 
-        parcel = easypost.Parcel.create(
-            length=13,
-            width=2,
-            height=10,
-            weight=weight
-        )
+        parcel = {
+            "length": 13,
+            "width": 2,
+            "height": 10,
+            "weight": weight
+        }
 
-        shipment = easypost.Shipment.create(
+        shipment = client.shipment.create(
             to_address=to_address,
             from_address=from_address,
             parcel=parcel
@@ -145,17 +147,17 @@ def get_labels(from_address, winners, prod, just_show_rates):
         if just_show_rates:
             result[email] = {'name': name, 'price': rate.rate}
             total_cost += float(rate.rate)
-            print('Rate : %s %s for entries %s' % (email, winner['entries'], rate.rate))
+            print('Rate : %s %s for entries %s' % (email, entries + bos_entries, rate.rate))
         else:
             try:
-                shipment.buy(rate=rate)
-            except:
-                print("Unable to purchase postage for %s at %s of weight %s" % (name, to_address, weight))
+                bought_shipment = client.shipment.buy(shipment.id, rate=rate)
+            except Exception as e:
+                print("Unable to purchase postage for %s at %s of weight %s : %s" % (name, to_address, weight, e))
                 continue
 
             print("Shipment purchased for %s" % name)
 
-            response = requests.get(shipment.postage_label.label_url, stream=True)
+            response = requests.get(bought_shipment.postage_label.label_url, stream=True)
             response.raw.decode_content = True
             filename = 'shipping-labels/%s%s.png' % (
                 name, '' if prod else '-test')
@@ -163,11 +165,12 @@ def get_labels(from_address, winners, prod, just_show_rates):
             with open(filename, 'wb') as f:
                 shutil.copyfileobj(response.raw, f)
 
-            print('Tracking : %s %s for entries %s' % (email, shipment.tracking_code, winner['entries']))
+            print('Tracking : %s %s %s for entries %s' % (
+                name, email, bought_shipment.tracking_code, entries + bos_entries))
 
             result[email] = {
                 'name': name,
-                'tracking_code': shipment.tracking_code
+                'tracking_code': bought_shipment.tracking_code
             }
     if just_show_rates:
         print(f"Total cost is {total_cost:.2f}")
@@ -187,17 +190,25 @@ def main():
                         help="Don't buy postage just show the rates")
     args = parser.parse_args()
     if args.prod:
-        easypost.api_key = config['easypost_production_api_key']
+        client = easypost.EasyPostClient(api_key=config['easypost_production_api_key'])
     else:
-        easypost.api_key = config['easypost_test_api_key']
+        client = easypost.EasyPostClient(api_key=config['easypost_test_api_key'])
 
     winners = get_winners(args.filename[0])
-    from_address = easypost.Address.create(**config['from_address'])
 
-    labels = get_labels(from_address, winners, args.prod, args.just_show_rates)
-
+    labels = get_labels(client, config['from_address'], winners, args.prod, args.just_show_rates)
+    try:
+        with open('labels.json', 'r') as f:
+            output = json.load(f)
+    except FileNotFoundError:
+        print('Creating labels.json as none exists')
+        output = {}
+    if not args.prod:
+        output['test'] = labels
+    else:
+        output.update(labels)
     with open('labels.json', 'w') as f:
-        json.dump(labels, indent=4)
+        json.dump(output, f, indent=4)
 
 
 if __name__ == "__main__":
