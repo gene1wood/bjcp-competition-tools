@@ -1,1 +1,7 @@
 ribbon-shipping/config.yaml
+ribbon-shipping/shipping-labels/
+ribbon-shipping/labels.json
+ribbon-shipping/table_place_to_ship.txt
+ribbon-shipping/entry_ids_to_ship.txt
+ribbon-shipping/winners.csv
+ribbon-shipping/print-shippping-labels.pdf
