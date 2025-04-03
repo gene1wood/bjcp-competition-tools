@@ -40,14 +40,18 @@
 * Record the resulting tracking numbers that are output. You'll want to save
   these to send to the entrants after you've shipped the ribbons so they can
   track their shipment.
-* Combine the resulting images togeting into a single PDF to make it easier to
+* Combine the resulting images together into a single PDF to make it easier to
   print with the Imagemagick command
 ```
 convert shipping-labels/*.png print-shippping-labels.pdf
 ```
-* Print out the shipping labels and attach them to the envelopes. Add the
-  ribbons and seal them. Drop them at the post office
-* Optionally afterward email the winners their tracking numbers. You can do this
+* Print out the shipping labels
+  * I've had difficulty printing on 4" x 6" mailing labels in linux or over a
+    print server running linux. I've taken the PDF to a Windows machine and
+    printed it from there, choosing a 4" x 6" custom paper size.
+* Attach the stickers to the envelopes. Add the ribbons and seal them. Drop 
+  them at the post office.
+* Optionally, afterward, email the winners their tracking numbers. You can do this
   by running `create_tracking_emails.py`
 
 # Gotchas
