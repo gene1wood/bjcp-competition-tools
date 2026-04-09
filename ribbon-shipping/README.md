@@ -20,7 +20,8 @@
           phone: 212-555-5555
 * Create the `winners.csv` file either
   * by going to the Admin panel of `BCOE&M`, going
-    to `Data Exports` and in the `Participant Data (CSV)` section click `Winners`.
+    to `Data Exports` and in the `Participant Data (CSV)` section click 
+    `Winners: Limited Data`.
     If you're going by entry ids, ensure that your version of `BCOE&M` has the 
     patched `output_entries_export_winner.db.php` and `entries_export.php`
     files so that the entry id is included in the `winners.csv` file
@@ -32,7 +33,9 @@
     just the number like `123`
   * If you create a `table_place_to_ship.txt` file, each line should contain a
     table number and a place number seperated by a comma. For example Table 21
-    3rd place would be `21,3`
+    3rd place would be `21,3` and the BOS ribbon which came from Table 8 would
+    be `8,1,bos`
+  * Lines can be commented out when they start with `#`
 * Make a `shipping-labels/` directory where the label images will go
 * Run `create_shipping_labels.py entry_ids_to_ship.txt` to do a test run
 * Check everything and delete the test labels created
@@ -41,9 +44,11 @@
   these to send to the entrants after you've shipped the ribbons so they can
   track their shipment.
 * Combine the resulting images together into a single PDF to make it easier to
-  print with the Imagemagick command
+  print with the Imagemagick command. This also adds a 5% margin around the image
+  by increasing the size of the image from 1200x1800 by 5%. This deals with the
+  printer cutting off the edges of the image
 ```
-convert shipping-labels/*.png print-shippping-labels.pdf
+convert shipping-labels/*.png -gravity center -extent 1260x1890 print-shipping-labels.pdf
 ```
 * Print out the shipping labels
   * I've had difficulty printing on 4" x 6" mailing labels in linux or over a

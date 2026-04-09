@@ -16,7 +16,7 @@ World Cup of Beer : Your ribbon(s) have been shipped
 
 {url}
 
-Thanks again for competing and we hope to see your entries again in 2025!
+Thanks again for competing and we hope to see your entries again in 2026!
 
 -Gene Wood
 World Cup of Beer

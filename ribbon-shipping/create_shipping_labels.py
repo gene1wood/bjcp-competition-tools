@@ -3,10 +3,16 @@ import os.path
 import csv
 import json
 import easypost  # pip install easypost
+import easypost.errors  # pip install easypost
 import requests  # pip install requests
 import shutil
 import yaml      # pip install pyyaml
 
+PLASTIC_ENVELOPE_WEIGHT = 0.6  # 0.6 - 0.8  includes 4" X 6" mailing label
+TYVEK_ENVELOPE_WEIGHT = 0.6
+PAPER_ENVELOPE_WEIGHT = 1.0
+RIBBON_WEIGHT = 1.7  # 1.5 - 1.7
+BOS_RIBBON_WEIGHT = 2.7
 
 def check():
     try:
@@ -77,7 +83,7 @@ def get_winners(entries_file):
     return winners
 
 
-def get_labels(client, from_address, winners, prod, just_show_rates):
+def get_labels(client, config, winners, prod, just_show_rates):
     result = {}
     total_cost = 0.0
     for email in winners:
@@ -115,14 +121,9 @@ def get_labels(client, from_address, winners, prod, just_show_rates):
         # phone=winner['Phone'],
         # email=winner['Email Address']
 
-        plastic_envelope_weight = 0.6  # 0.6 - 0.8  includes 4" x 6" mailing label
-        tyvek_envelope_weight = 0.6
-        paper_envelope_weight = 1.0
-        ribbon_weight = 1.7  # 1.5 - 1.7
-        bos_ribbon_weight = 2.7
         entries = [x for x in winner['entries'] if len(x.split(',')) == 2]
         bos_entries = [x for x in winner['entries'] if len(x.split(',')) == 3 and x.split(',')[2] == 'bos']
-        weight = plastic_envelope_weight + (ribbon_weight * len(entries)) + (bos_ribbon_weight * len(bos_entries))
+        weight = PLASTIC_ENVELOPE_WEIGHT + (RIBBON_WEIGHT * len(entries)) + (BOS_RIBBON_WEIGHT * len(bos_entries))
 
         parcel = {
             "length": 13,
@@ -131,28 +132,74 @@ def get_labels(client, from_address, winners, prod, just_show_rates):
             "weight": weight
         }
 
-        shipment = client.shipment.create(
-            to_address=to_address,
-            from_address=from_address,
-            parcel=parcel
-        )
+        shipment_args = {
+            "to_address": to_address,
+            "from_address": config['from_address'],
+            "parcel": parcel
+        }
+
+        if to_address['country'] != 'US':
+            customs_items = []
+            for entry in entries:
+                customs_items.append(client.customs_item.create(
+                    description="Award ribbon",
+                    quantity=1,
+                    weight=RIBBON_WEIGHT,
+                    value=10,
+                    hs_tariff_number="6307.90.9989",  # http://www.faqs.org/rulings/rulings2001NYH84051.html
+                    origin_country="US"
+                ))
+            for entry in bos_entries:
+                customs_items.append(client.customs_item.create(
+                    description="Award ribbon",
+                    quantity=1,
+                    weight=BOS_RIBBON_WEIGHT,
+                    value=10,
+                    hs_tariff_number="6307.90.9989",  # http://www.faqs.org/rulings/rulings2001NYH84051.html
+                    origin_country="US"
+                ))
+            customs_info = client.customs_info.create(
+                customs_items=customs_items,
+                contents_type="merchandise",
+                restriction_type="none",
+                customs_certify=True,
+                customs_signer=config['customs_signer'],
+                eel_pfc="NOEEI 30.37(a)"  # https://docs.easypost.com/guides/customs-guide
+            )
+            shipment_args["customs_info"] = customs_info
+
+        shipment = client.shipment.create(**shipment_args)
 
         # for rate in shipment.rates:
         #     print("%s (%s oz) : %s %s %s %s" % (email, weight, rate.carrier, rate.service, rate.rate, rate.id))
 
-        rate = shipment.lowest_rate(
-            carriers=['USPS'],
-            services=['First'])
-
+        try:
+            rate = shipment.lowest_rate(
+                carriers=['USPS', 'UPS'],
+                services=['GroundAdvantage', 'FirstClassPackageInternationalService', 'UPSDAP UPSSaver'])
+        except easypost.errors.general.filtering_error.FilteringError as e:
+            print(e)
+            print(shipment)
+            raise e
         if just_show_rates:
             result[email] = {'name': name, 'price': rate.rate}
             total_cost += float(rate.rate)
-            print('Rate : %s %s for entries %s' % (email, entries + bos_entries, rate.rate))
+            print('Rate : %s %s for entries using %s %s will cost %s to ship to %s' % (
+                email, entries + bos_entries, rate.carrier, rate.service, rate.rate, '%s %s, %s' % (shipment.to_address['street1'], shipment.to_address['city'], shipment.to_address['state'])))
+            # for r in shipment['rates']:
+            #     print('%s %s %s' % (r['rate'], r['carrier'], r['service']))
         else:
             try:
-                bought_shipment = client.shipment.buy(shipment.id, rate=rate)
+                shipment_args = {
+                    "id": shipment.id,
+                    "rate": rate
+                }
+                bought_shipment = client.shipment.buy(**shipment_args)
             except Exception as e:
-                print("Unable to purchase postage for %s at %s of weight %s : %s" % (name, to_address, weight, e))
+                print("Unable to purchase postage for %s at %s of weight %s : %s : %s : %s" % (name, to_address, weight, e, e.json_body, e.http_body))
+                print("Shipment : %s" % shipment)
+                print("Shipment arguments : %s" % shipment_args)
+                raise
                 continue
 
             print("Shipment purchased for %s" % name)
@@ -196,7 +243,7 @@ def main():
 
     winners = get_winners(args.filename[0])
 
-    labels = get_labels(client, config['from_address'], winners, args.prod, args.just_show_rates)
+    labels = get_labels(client, config, winners, args.prod, args.just_show_rates)
     try:
         with open('labels.json', 'r') as f:
             output = json.load(f)

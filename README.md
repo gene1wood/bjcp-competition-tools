@@ -1,11 +1,19 @@
 # Overview
 
-These are a set of tools to enable creating QR code stickers to stick to BJCP
+These are a set of tools to enable two things
+
+## QR Code Scoresheets
+
+Creating QR code stickers to stick to BJCP
 scoresheets and scanning those scoresheets and programatically determining
 the entry id. The end goal is to enable digital delivery of completed
 scoresheets to competition entrants and to avoid doing data entry from
 scoresheets or physically distributing (in person or in snail mail) completed
 scoresheets back to entrants.
+
+## Ribbons
+
+Tooling to programmatically purchase postage to ship ribbons.
 
 # Before the competition
 
@@ -84,3 +92,8 @@ Rename the file to one containing the entered entry number.
 
 Collect together all the prelims and finals scoresheet images into a single
 pdf file for each entry
+
+## Ship the Ribbons
+
+Details on ribbon shipping can be found in
+[`ribbon-shipping/README.md`](ribbon-shipping/README.md)
